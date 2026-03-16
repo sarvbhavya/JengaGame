@@ -3,6 +3,7 @@ using UnityEngine;
 public class SC_DragRigidbody : MonoBehaviour
 {
     public float forceAmount = 500;
+    public bool hasPoints = false;
 
     Rigidbody selectedRigidbody;
     Camera targetCamera;

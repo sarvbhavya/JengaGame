@@ -5,6 +5,7 @@ using UnityEngine;
 public class Cameramovement : MonoBehaviour
 {
     public float mouseSensitivity = 100f;
+    public PauseMenu Pm;
 
     public Transform Camera;
 
@@ -25,7 +26,16 @@ public class Cameramovement : MonoBehaviour
 
     void Start()
     {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        if (Pm.MousePause == false)
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        if (Pm.MousePause == true)
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
     }
 }

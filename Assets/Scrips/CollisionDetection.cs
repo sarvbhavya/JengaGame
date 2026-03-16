@@ -6,6 +6,7 @@ public class CollisionDetection : MonoBehaviour
 {
 
     public float blocksFallen = 0f;
+    public float Score = 0f;
 
     void OnTriggerEnter()
     {
@@ -15,7 +16,7 @@ public class CollisionDetection : MonoBehaviour
 
     void Update()
     {
-        if (blocksFallen > 3)
+        if (blocksFallen > 2)
         {
             FindObjectOfType<GameManagerScript>().EndGame();
         }
