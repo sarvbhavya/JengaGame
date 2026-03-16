@@ -19,20 +19,25 @@ jobs:
       QUALITY: 85
       DPI: 250
     steps:
-    # Updated to v4
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        # Required to let the runner push changes back to the repo
         persist-credentials: true 
+
+    ## NEW STEP: INSTALL DEPENDENCIES
+    - name: Install ImageMagick and Ghostscript
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y imagemagick ghostscript
 
     ## CONVERT THE ACTUAL IMAGES
     - name: Convert Writeup to Images
       run: |
         # 1. Modify the default Ubuntu ImageMagick security policy to allow PDF reading/writing
-        sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
+        # Added a wildcard (*) to the folder path to ensure it catches v6 or v7 automatically
+        sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-*/policy.xml
         
-        # 2. Run the conversion directly on the runner
+        # 2. Run the conversion
         convert -density ${{env.DPI}} -trim -colorspace sRGB -alpha remove writeup.pdf -quality ${{env.QUALITY}} output-%03d.jpg
 
     ## COMMIT THEM TO AN ORPHAN BRANCH
@@ -47,7 +52,6 @@ jobs:
         git config --local user.name "GithubActions"
         git commit -m "Updated writeup images" -a
         
-        # Replaced the third-party push action with a standard git command
         git push -f origin ${{env.ORPHAN_BRANCH}}
 
     ## UPDATE README IN BRANCH IF IT NEEDS TO BE UPDATED
@@ -64,7 +68,6 @@ jobs:
         OUTPUT=0
         git diff --exit-code README.md || OUTPUT=$?
         
-        # Fixed the deprecated set-output command
         echo "OUTPUT=$OUTPUT" >> $GITHUB_OUTPUT
         
     - name: Commit new README (if changed)
@@ -75,5 +78,4 @@ jobs:
         git config --local user.name "GithubActions"
         git commit -m "Updated Readme" -a
         
-        # Replaced the third-party push action with a standard git command
         git push origin HEAD:${{ github.ref }}
