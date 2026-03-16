@@ -19,19 +19,24 @@ jobs:
       QUALITY: 85
       DPI: 250
     steps:
-    - uses: actions/checkout@v2
+    # Updated to v4
+    - uses: actions/checkout@v4
       with:
-        persist-credentials: false
         fetch-depth: 0
+        # Required to let the runner push changes back to the repo
+        persist-credentials: true 
 
     ## CONVERT THE ACTUAL IMAGES
     - name: Convert Writeup to Images
-      uses: jruipinto/ImageMagick-action@v1
-      with:
-        command: convert -density ${{env.DPI}} -trim -colorspace sRGB -alpha remove writeup.pdf -quality ${{env.QUALITY}} output-%03d.jpg
+      run: |
+        # 1. Modify the default Ubuntu ImageMagick security policy to allow PDF reading/writing
+        sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
+        
+        # 2. Run the conversion directly on the runner
+        convert -density ${{env.DPI}} -trim -colorspace sRGB -alpha remove writeup.pdf -quality ${{env.QUALITY}} output-%03d.jpg
 
-    ## COMMIT THEM TO A ORPHAN BRANCH
-    - name: Commit images to orphan branch
+    ## COMMIT THEM TO AN ORPHAN BRANCH
+    - name: Commit and push images to orphan branch
       run: | 
         git checkout --orphan ${{env.ORPHAN_BRANCH}}
         touch .README.md
@@ -41,12 +46,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GithubActions"
         git commit -m "Updated writeup images" -a
-    - name: Push images to orphan branch
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ env.ORPHAN_BRANCH }}
-        force: true
+        
+        # Replaced the third-party push action with a standard git command
+        git push -f origin ${{env.ORPHAN_BRANCH}}
 
     ## UPDATE README IN BRANCH IF IT NEEDS TO BE UPDATED
     - name: Update Readme
@@ -61,16 +63,17 @@ jobs:
         mv .README.temp README.md
         OUTPUT=0
         git diff --exit-code README.md || OUTPUT=$?
-        echo "::set-output name=OUTPUT::$OUTPUT"
+        
+        # Fixed the deprecated set-output command
+        echo "OUTPUT=$OUTPUT" >> $GITHUB_OUTPUT
+        
     - name: Commit new README (if changed)
-      if: steps.main.outputs.OUTPUT == 1
+      if: steps.main.outputs.OUTPUT == '1'
       run: |
         git add README.md
         git config --local user.email "action@github.com"
         git config --local user.name "GithubActions"
         git commit -m "Updated Readme" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+        
+        # Replaced the third-party push action with a standard git command
+        git push origin HEAD:${{ github.ref }}
