@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Cameramovement : MonoBehaviour
 {
-
     public float mouseSensitivity = 100f;
 
     public Transform Camera;
@@ -12,13 +11,6 @@ public class Cameramovement : MonoBehaviour
     float xRotation = 0f;
     float yrotation = 0f;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
@@ -29,6 +21,11 @@ public class Cameramovement : MonoBehaviour
 
         transform.localRotation = Quaternion.Euler(xRotation, yrotation, 0f);
 
+    }
 
+    void Start()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 }
